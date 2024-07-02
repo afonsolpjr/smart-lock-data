@@ -1,0 +1,28 @@
+
+*.zip
+
+# Dependency directories
+node_modules/
+
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+
+# Output of 'npm pack'
+*.tgz
+
+# Gatsby files
+.cache/
+# Comment in the public line in if your project uses Gatsby and not Next.js
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# public
+
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
