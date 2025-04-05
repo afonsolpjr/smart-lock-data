@@ -24,9 +24,19 @@ const httpClient = axios.create({
 async function main() {
   await getToken();
   // const data = await getUserInfo(config.deviceId);
-  const data = await testlog(config.deviceId);
-  console.log('fetch success: ', Object.keys(data.result.logs).length);
+  const data = await getlogs();
+  console.log('fetch success: ', data.length);
   console.log(data);  
+  var json = JSON.stringify(data);
+  const fs = require('node:fs');
+  fs.writeFile('test_logs.json', json, err => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log("gravou de boa");
+  }
+  });
+
 }
 /**
  * fetch highway login token
@@ -59,7 +69,8 @@ async function getToken() {
 async function getTempPW(deviceId: string){
   const query = {};
   const method = 'GET';
-  const url = `/v1.0/devices/${deviceId}/door-lock/temp-passwords`;
+  const url = `/v1.1/devices/${deviceId}/door-lock/offline-temp-password`;
+  
   const reqHeaders: { [k: string]: string } = await getRequestSign(url, method, {}, query);
 
 
@@ -77,10 +88,33 @@ async function getTempPW(deviceId: string){
 }
 
 
-async function testlog(deviceId: string){
+async function getlogs(){
+
+  let logs: any[] = [];
+  let actual_page: number = 1;
+  let pg_size: number;
+  //pegar primeira pagina
+
+  let response = await getlog(config.deviceId,actual_page,500);
+  logs.push(...response.result.logs);
+  const total_logs = response.result.total;
+
+  while((logs.length)<total_logs){
+    actual_page+=1;
+    console.log("pegando pagina: "+ actual_page);
+    console.log("tamanho do array = " + logs.length + "   total = " +total_logs);
+    pg_size = (total_logs-logs.length<500)? (total_logs-logs.length): 500; 
+    response = await getlog(config.deviceId,actual_page,pg_size);
+    logs.push(...response.result.logs);    
+  }
+
+  return logs;
+}
+
+async function getlog(deviceId: string, page_num: number, pg_size: number){
   const query = {
-    page_no:1,
-    page_size:500,
+    page_no:page_num,
+    page_size:pg_size,
     start_time: new Date(2023,12,25).valueOf(),
     end_time: Date.now()
   };
@@ -97,6 +131,7 @@ async function testlog(deviceId: string){
     url: reqHeaders.path,
   });
   if (!data || !data.success) {
+    console.log(data.msg);
     throw Error(`request api failed: ${data.msg}`);
   }
   return data;
